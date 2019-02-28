@@ -43,7 +43,7 @@ variable "master_password" {
 
 variable "instance_type" {
   description = "The type of instances that the RDS cluster will be running on"
-  default     = "db.r3.large"
+  default     = "db.r4.large"
 }
 
 variable "instance_count" {
@@ -71,9 +71,19 @@ variable "dns_name" {
   default     = ""
 }
 
+variable "engine" {
+  description = "Database engine: mysql, postgres, etc."
+  default     = "aurora-postgresql"
+}
+
+variable "engine_version" {
+  description = "Database engine version"
+  default     = "9.6.8"
+}
+
 variable "port" {
   description = "The port at which the database listens for incoming connections"
-  default     = 3306
+  default     = 5432
 }
 
 variable "skip_final_snapshot" {
@@ -83,7 +93,7 @@ variable "skip_final_snapshot" {
 
 resource "aws_security_group" "main" {
   name        = "${var.name}-rds-cluster"
-  description = "Allows traffic to rds from other security groups"
+  description = "Allows traffic to RDS cluster from other security groups"
   vpc_id      = "${var.vpc_id}"
 
   ingress {
@@ -110,6 +120,10 @@ resource "aws_db_subnet_group" "main" {
   name        = "${var.name}"
   description = "RDS cluster subnet group"
   subnet_ids  = ["${var.subnet_ids}"]
+
+  tags {
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_rds_cluster_instance" "cluster_instances" {
@@ -118,13 +132,22 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   cluster_identifier   = "${aws_rds_cluster.main.id}"
   publicly_accessible  = "${var.publicly_accessible}"
   instance_class       = "${var.instance_type}"
+  engine               = "${var.engine}"
+  engine_version       = "${var.engine_version}"
 
   # need a deterministic identifier or terraform will force a new resource every apply
   identifier = "${aws_rds_cluster.main.id}-${count.index}"
+
+  tags {
+    Name        = "RDS cluster ${var.name}"
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_rds_cluster" "main" {
   cluster_identifier        = "${var.name}"
+  engine                    = "${var.engine}"
+  engine_version            = "${var.engine_version}"
   availability_zones        = ["${var.availability_zones}"]
   database_name             = "${var.database_name}"
   master_username           = "${var.master_username}"
@@ -136,6 +159,11 @@ resource "aws_rds_cluster" "main" {
   port                      = "${var.port}"
   skip_final_snapshot       = "${var.skip_final_snapshot}"
   final_snapshot_identifier = "${var.name}-finalsnapshot"
+
+  tags {
+    Name        = "RDS cluster ${var.name}"
+    Environment = "${var.environment}"
+  }
 }
 
 resource "aws_route53_record" "main" {
@@ -144,6 +172,10 @@ resource "aws_route53_record" "main" {
   type    = "CNAME"
   ttl     = 300
   records = ["${aws_rds_cluster.main.endpoint}"]
+
+  tags {
+    Environment = "${var.environment}"
+  }
 }
 
 // The cluster identifier.
