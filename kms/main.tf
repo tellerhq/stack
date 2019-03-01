@@ -28,10 +28,6 @@ resource "aws_kms_key" "kms_key" {
 resource "aws_kms_alias" "kms_key_alias" {
   name          = "${var.alias_name}_${var.environment}"
   target_key_id = "${aws_kms_key.kms_key.id}"
-
-  tags = {
-    Environment = "${var.environment}"
-  }
 }
 
 output "key_id" {
