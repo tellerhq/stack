@@ -37,7 +37,7 @@ variable "domain_name_servers" {
 
 variable "region" {
   description = "the AWS region in which resources are created, you must set the availability_zones variable as well if you define this value to something other than the default"
-  default     = "us-west-2"
+  default     = "eu-west-1"
 }
 
 variable "cidr" {
@@ -47,7 +47,7 @@ variable "cidr" {
 
 variable "internal_subnets" {
   description = "a list of CIDRs for internal subnets in your VPC, must be set if the cidr variable is defined, needs to have as many elements as there are availability zones"
-  default     = ["10.30.0.0/19" ,"10.30.64.0/19", "10.30.128.0/19"]
+  default     = ["10.30.0.0/19", "10.30.64.0/19", "10.30.128.0/19"]
 }
 
 variable "external_subnets" {
@@ -57,17 +57,17 @@ variable "external_subnets" {
 
 variable "availability_zones" {
   description = "a comma-separated list of availability zones, defaults to all AZ of the region, if set to something other than the defaults, both internal_subnets and external_subnets have to be defined as well"
-  default     = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  default     = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 }
 
 variable "bastion_instance_type" {
   description = "Instance type for the bastion"
-  default = "t2.micro"
+  default     = "t2.micro"
 }
 
 variable "ecs_cluster_name" {
   description = "the name of the cluster, if not specified the variable name will be used"
-  default = ""
+  default     = ""
 }
 
 variable "ecs_instance_type" {
@@ -216,14 +216,18 @@ module "ecs_cluster" {
   max_size               = "${var.ecs_max_size}"
   desired_capacity       = "${var.ecs_desired_capacity}"
   region                 = "${var.region}"
-  availability_zones     = "${module.vpc.availability_zones}"
-  root_volume_size       = "${var.ecs_root_volume_size}"
-  docker_volume_size     = "${var.ecs_docker_volume_size}"
-  docker_auth_type       = "${var.ecs_docker_auth_type}"
-  docker_auth_data       = "${var.ecs_docker_auth_data}"
-  security_groups        = "${coalesce(var.ecs_security_groups, format("%s,%s,%s", module.security_groups.internal_ssh, module.security_groups.internal_elb, module.security_groups.external_elb))}"
-  extra_cloud_config_type     = "${var.extra_cloud_config_type}"
-  extra_cloud_config_content  = "${var.extra_cloud_config_content}"
+
+  # https://github.com/terraform-providers/terraform-provider-aws/issues/2435#issuecomment-375687159
+  # ecs modules specifies vpc_zone_identifier, hence we need to set availability_zones to []
+  availability_zones = []
+
+  root_volume_size           = "${var.ecs_root_volume_size}"
+  docker_volume_size         = "${var.ecs_docker_volume_size}"
+  docker_auth_type           = "${var.ecs_docker_auth_type}"
+  docker_auth_data           = "${var.ecs_docker_auth_data}"
+  security_groups            = "${coalesce(var.ecs_security_groups, format("%s,%s,%s", module.security_groups.internal_ssh, module.security_groups.internal_elb, module.security_groups.external_elb))}"
+  extra_cloud_config_type    = "${var.extra_cloud_config_type}"
+  extra_cloud_config_content = "${var.extra_cloud_config_content}"
 }
 
 module "s3_logs" {
