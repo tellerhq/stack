@@ -172,10 +172,6 @@ resource "aws_route53_record" "main" {
   type    = "CNAME"
   ttl     = 300
   records = ["${aws_rds_cluster.main.endpoint}"]
-
-  tags {
-    Environment = "${var.environment}"
-  }
 }
 
 // The cluster identifier.
