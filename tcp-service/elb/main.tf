@@ -110,12 +110,6 @@ resource "aws_route53_record" "external" {
     name                   = "${aws_elb.main.dns_name}"
     evaluate_target_health = false
   }
-
-  tags {
-    Name        = "${var.name}-balancer"
-    Service     = "${var.name}"
-    Environment = "${var.environment}"
-  }
 }
 
 resource "aws_route53_record" "internal" {
@@ -127,12 +121,6 @@ resource "aws_route53_record" "internal" {
     zone_id                = "${aws_elb.main.zone_id}"
     name                   = "${aws_elb.main.dns_name}"
     evaluate_target_health = false
-  }
-
-  tags {
-    Name        = "${var.name}-balancer"
-    Service     = "${var.name}"
-    Environment = "${var.environment}"
   }
 }
 
