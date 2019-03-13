@@ -44,6 +44,7 @@ variable "use_eip_with_nat_instances" {
 # This data source returns the newest Amazon NAT instance AMI
 data "aws_ami" "nat_ami" {
   most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "owner-alias"

@@ -23,9 +23,14 @@ variable "vpc_id" {
 }
 
 resource "aws_route53_zone" "main" {
-  name    = "${var.name}"
-  vpc_id  = "${var.vpc_id}"
+  name = "${var.name}"
+
+  //vpc_id  = "${var.vpc_id}"
   comment = ""
+
+  vpc {
+    vpc_id = "${var.vpc_id}"
+  }
 }
 
 // The domain name.
